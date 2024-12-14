@@ -1,51 +1,83 @@
-import dto.AllSensors;
 import dto.Measurements;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import utils.DataGenerator;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 
 public class Sensor {
-    public static void main(String[] args) {
-        RestTemplate restTemplate = new RestTemplate();
+    static RestTemplate restTemplate = new RestTemplate();
+    public static void main(String[] args) throws InterruptedException {
+        dto.Sensor sensor = new dto.Sensor();
+        sensor.setName("Pargolovo");
+        //addNewSensor(sensor.getName());
 
-//        String response = restTemplate.getForObject(EndPoints.SENSOR_API_URL + EndPoints.ALL_SENSORS, String.class);
-//        System.out.println(response);
+        Measurements measurements = new Measurements();
+        measurements.setSensor(sensor);
 
-//        AllSensors sensors = restTemplate.getForObject(EndPoints.SENSOR_API_URL + EndPoints.ALL_SENSORS, AllSensors.class);
-//        sensors.getSensor().forEach(System.out::println);
+        for (int i = 0; i < 1000; i++) {
+            measurements.setValue(DataGenerator.genTemperature());
+            measurements.setRaining(DataGenerator.genIsRaining());
+            System.out.println(measurements);
+            addNewMeasurements(measurements);
+            Thread.sleep(100);
+        }
+
+/*
+        //добавить новый сенсор
+        addNewSensor("Pulkovo");
+
+        //добавить 1000 измерений со случайными значениями
+
+        //получить все измерения
+        List<Measurements> measurements = getMeasurements();
+        measurements.forEach(System.out::println);
+
+        //получить список всех сенсоров
+        List<dto.Sensor> sensors = getAllSensors();
+        sensors.forEach(System.out::println); */
+//        for (int i = 0; i < 3; i++) {
+//            System.out.println(String.format("Temperature is: %s, rainy is: %b",DataGenerator.genTemperature(), DataGenerator.genIsRaining()));
+//        }
 
 
-
-//        ResponseEntity<List<dto.Sensor>> sensorResponse =
-//                restTemplate.exchange(EndPoints.SENSOR_API_URL + EndPoints.ALL_SENSORS,
-//                        HttpMethod.GET, null, new ParameterizedTypeReference<List<dto.Sensor>>() {
-//                        });
-//        List<dto.Sensor> sensors = sensorResponse.getBody();
-//        sensors.forEach(System.out::println);
-
-
-
+    }
+    public static List<Measurements> getMeasurements() {
         ResponseEntity<List<Measurements>> measurementsResponse =
                 restTemplate.exchange(EndPoints.SENSOR_API_URL + EndPoints.ALL_MEASUREMENTS,
                         HttpMethod.GET, null,
                         new ParameterizedTypeReference<List<Measurements>>() {
                         });
-        List<Measurements> measurements= measurementsResponse.getBody();
-        measurements.forEach(System.out::println);
-
-
-//        Map<String, String> addNewSensorJson = new HashMap<String, String>();
-//        addNewSensorJson.put("name", "Sertolovo_Centr");
-//
-//        HttpEntity<Map<String, String>> addNewSensorRequest = new HttpEntity<Map<String, String>>(addNewSensorJson);
-//        String newSensorResponse = restTemplate.postForObject(EndPoints.SENSOR_API_URL + EndPoints.ADD_SENSOR, addNewSensorRequest, String.class);
-//        System.out.println(newSensorResponse);
+        return measurementsResponse.getBody();
+    }
+    public static void addNewSensor(String sensorName) {
+        Map<String, String> addNewSensorJson = new HashMap<>();
+        addNewSensorJson.put("name", sensorName);
+        HttpEntity<Map<String, String>> addNewSensorRequest = new HttpEntity<>(addNewSensorJson);
+        String newSensorResponse = restTemplate.postForObject(EndPoints.SENSOR_API_URL + EndPoints.ADD_SENSOR, addNewSensorRequest, String.class);
+        System.out.println(newSensorResponse);
+    }
+    public static void addNewMeasurements(Measurements measurements) {
+//        Map<String, String> addNewMeasurementsJson = new HashMap<>();
+//        addNewMeasurementsJson.put("value", measurements.getValue() + "");
+//        addNewMeasurementsJson.put("raining", measurements.isRaining() + "");
+//        addNewMeasurementsJson.put("sensor", "{\"name\": \"Pargolovo\"}");
+//        System.out.println(addNewMeasurementsJson);
+//        HttpEntity<Map<String,String>> addNewMeasurementsRequest = new HttpEntity<>(addNewMeasurementsJson);
+//        restTemplate.postForObject(EndPoints.SENSOR_API_URL + EndPoints.ADD_MEASUREMENT, addNewMeasurementsRequest, String.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Measurements> request = new HttpEntity<>(measurements, headers);
+        restTemplate.postForObject(EndPoints.SENSOR_API_URL + EndPoints.ADD_MEASUREMENT, request, String.class);
+    }
+    public static List<dto.Sensor> getAllSensors() {
+        ResponseEntity<List<dto.Sensor>> sensorResponse =
+                restTemplate.exchange(EndPoints.SENSOR_API_URL + EndPoints.ALL_SENSORS,
+                        HttpMethod.GET, null, new ParameterizedTypeReference<List<dto.Sensor>>() {
+                        });
+        return sensorResponse.getBody();
     }
 }

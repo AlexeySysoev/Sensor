@@ -5,6 +5,9 @@ public class Measurements {
     private boolean raining;
     private Sensor sensor;
 
+    public Measurements() {
+    }
+
     public double getValue() {
         return value;
     }

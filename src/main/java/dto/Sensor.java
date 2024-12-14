@@ -3,6 +3,9 @@ package dto;
 public class Sensor {
     private String name;
 
+    public Sensor() {
+    }
+
     public String getName() {
         return name;
     }
